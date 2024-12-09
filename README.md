@@ -9,7 +9,7 @@ This project is a **scalable E-commerce REST API** built using **Node.js**. It p
 
 ### 1. **Authentication System**  
 - Secure user login and registration for **users**, **sellers**, and **admins**.  
-- Token-based authentication (e.g., JWT).  
+- Token-based authentication (JWT).  
 
 ### 2. **Authorization System**  
 - Restricts access to routes based on user roles.  
