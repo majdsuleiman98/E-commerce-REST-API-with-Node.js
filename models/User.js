@@ -47,9 +47,13 @@ const userSchema = new mongoose.Schema({
             return this.role == 'seller'
         },
     },
-    active:{
+    isVerified:{
         type:Boolean,
-        default:true
+        default:false
+    },
+    otp:{
+        code:String,
+        expiry:Date
     },
     wishlist:[{
         type:mongoose.Schema.ObjectId,
