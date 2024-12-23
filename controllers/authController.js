@@ -3,6 +3,9 @@ const {User} = require('../models/User');
 const jwt = require('jsonwebtoken');
 const bcryptjs = require('bcryptjs');
 const ApiError = require('../utils/apiError');
+const { generateOTP, sendOTP } = require('../utils/emailSender');
+
+
 
 /**
  * @desc Register user
@@ -12,16 +15,70 @@ const ApiError = require('../utils/apiError');
  */
 const Register = asyncHandler(
     async(req,res)=>{
+        const [otp, otpExpiry] = generateOTP();
         const user = await User.create({
             name:req.body.name,
             email:req.body.email,
             password:req.body.password,
-            phone:req.body.phone
+            phone:req.body.phone,
+            otp: {
+                code: otp,
+                expiry: otpExpiry,
+            },
         });
+        await sendOTP(req.body.email, otp);
+        res.status(201).json({ 
+            message: 'Registration successful. Please verify your email with the OTP sent.'
+        });
+})
+
+/**
+ * @desc Verify user email
+ * @route /api/auth/verify
+ * @method POST
+ * @access public
+ */
+const Verify = asyncHandler(
+    async(req,res)=>{
+        const { email, otp } = req.body;
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        if (user.otp.code !== otp || new Date() > user.otp.expiry) {
+            return res.status(400).json({ message: 'Invalid or expired OTP' });
+        }
+        user.isVerified = true;
+        user.otp = undefined; 
+        await user.save();
         const token = jwt.sign({id:user._id,role:user.role},process.env.JWT_SECRET_KEY,{expiresIn:process.env.JWT_EXPIRE_TIME});
         res.status(201).json({message:'You are registered successfully',user,token});
-    }
-)
+})
+
+
+/**
+ * @desc Resen OTP to user email
+ * @route /api/auth/resend-otp
+ * @method POST
+ * @access public
+ */
+const ResendOtp = asyncHandler(
+    async(req,res)=>{
+        const { email } = req.body;
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        const [otp, otpExpiry] = generateOTP();
+        user.otp = {
+            code: otp,
+            expiry: otpExpiry,
+        };
+        await user.save();
+        await sendOTP(email, otp);
+        res.json({ message: 'New OTP sent successfully' });
+})
+
 
 /**
  * @desc Login user
@@ -64,5 +121,7 @@ const Beseller = asyncHandler(
 module.exports = {
     Register,
     Login,
-    Beseller
+    Beseller,
+    Verify,
+    ResendOtp
 }
