@@ -11,7 +11,7 @@ const transporter = nodemailer.createTransport({
 
 function generateOTP() {
     const otpExpiry = new Date();
-    otpExpiry.setMinutes(otpExpiry.getMinutes() + 1);
+    otpExpiry.setMinutes(otpExpiry.getMinutes() + 10);
     return [crypto.randomInt(100000, 999999).toString(), otpExpiry];
 }
 
