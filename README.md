@@ -1,7 +1,7 @@
 # E-commerce REST API with Node.js  
 
 ## Overview  
-This project is a **scalable E-commerce REST API** built using **Node.js**. It provides core features for an online shopping platform, including **authentication**, **authorization**, and various role-based functionalities for users, sellers, and admins.  
+This project is a **scalable E-commerce REST API** built using **Node.js**. It provides core features for an online shopping platform, including **authentication**, **authorization**, **OTP-based account verification** and various role-based functionalities for users, sellers, and admins.  
 
 ---
 
@@ -9,7 +9,10 @@ This project is a **scalable E-commerce REST API** built using **Node.js**. It p
 
 ### 1. **Authentication System**  
 - Secure user login and registration for **users**, **sellers**, and **admins**.  
-- Token-based authentication (JWT).  
+- Token-based authentication (JWT).
+- Email Verification with OTP:  
+  - After registration, users are required to verify their email through a **One-Time Password (OTP)** sent to their email.  
+  - The OTP is time-limited to ensure security and prevent unauthorized access.  
 
 ### 2. **Authorization System**  
 - Restricts access to routes based on user roles.  
@@ -49,7 +52,8 @@ This project is a **scalable E-commerce REST API** built using **Node.js**. It p
 ## Technologies Used  
 - **Backend Framework**: Node.js  
 - **Database**: MongoDB (with Mongoose)  
-- **Authentication**: JSON Web Tokens (JWT)  
+- **Authentication**: JSON Web Tokens (JWT)
+- **OTP Verification**: **Nodemailer** (for sending OTP via email)
 - **Validation**: express-validator  
 - **Routing and Middleware**: Express.js  
 - **Cloud Storage (optional)**: Cloudinary for images  
