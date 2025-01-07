@@ -4,7 +4,7 @@ const ApiError = require("../utils/apiError");
 const Cart = require("../models/Cart");
 const { Product } = require("../models/Product");
 const { User } = require("../models/User");
-
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
 /**
  * @desc Create order
@@ -38,6 +38,45 @@ exports.createOrder = asyncHandler(
         res.status(201).json({message:"Order created successfully",order});
     }
 )
+
+
+/**
+ * @desc Create checkout session from stripe payment 
+ * @route /api/order/checkout-session/cartId
+ * @method POST
+ * @access private only logged user
+ */
+exports.checkoutSession = asyncHandler(
+    async(req, res, next)=>{
+        const user = await User.findById(req.user.id);
+        const cart = await Cart.findOne({user:req.user.id});
+        if(!cart){
+            return next(new ApiError('Cart not found',404));
+        }
+        const cartPrice = cart.totalPriceAfterDiscount ? cart.totalPriceAfterDiscount : cart.totalPrice;
+        const session = await stripe.checkout.sessions.create({
+            line_items: [{
+                price_data: {
+                currency: 'usd',
+                unit_amount: Math.round(cartPrice * 100),
+                product_data: {
+                    name: user.name,
+                    description: `Order for ${user.name}`
+                }
+            },
+            quantity: 1,
+            }],
+            mode: 'payment',
+            success_url: `${req.protocol}://${req.get('host')}/orders`,
+            cancel_url: `${req.protocol}://${req.get('host')}/cart`,
+            customer_email : user.email,
+            client_reference_id: req.params.cartId,
+            metadata: req.body.address
+    })
+    res.status(200).json({message:"session created successfully", session});
+})
+
+
 /**
  * @desc Get orders of one user
  * @route /api/order
@@ -50,6 +89,7 @@ exports.GetOrdersOfUser = asyncHandler(
         res.status(200).json({message:"Your orders",orders});
     }
 )
+
 
 /**
  * @desc Get specific order of one user
